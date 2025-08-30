@@ -70,6 +70,7 @@
 
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="showTab('dashboard', this)">📊 Dashboard</button>
+            <button class="nav-tab" onclick="showTab('about', this)">ℹ️ About</button>
             <button class="nav-tab" onclick="showTab('products', this)">👗 Products</button>
             <button class="nav-tab" onclick="showTab('inventory', this)">📦 Inventory</button>
             <button class="nav-tab" onclick="showTab('alerts', this)">🚨 Alerts</button>
@@ -117,7 +118,26 @@
                 <div id="best-selling-products" class="product-grid"></div>
             </div>
         </div>
-
+         <div id="about" class="tab-content">
+    <h2>ℹ️ About Soniya Dresses Billing System</h2>
+    <p>This comprehensive billing and inventory management solution is designed to streamline operations for Soniya Dresses. Below are the key features and how they work:</p>
+    
+    <div style="margin-top: 20px;">
+        <h3>Core Features:</h3>
+        <ul style="list-style-type: disc; padding-left: 20px;">
+            <li><strong>Dashboard:</strong> Get a real-time overview of your business with key statistics like total products, stock, invoices, and today's sales. It also highlights top-selling products.</li>
+            <li><strong>Product Management:</strong> Easily add new products with details such as name, category, price, quantity, and a unique barcode. You can also edit and delete product information.</li>
+            <li><strong>Inventory Management:</strong> Keep a close eye on your stock levels, with a searchable list of all products and their current quantity and status.</li>
+            <li><strong>Low Stock Alerts:</strong> The system automatically alerts you when products fall below a predefined low-stock threshold, helping you to reorder items in a timely manner.</li>
+            <li><strong>Billing:</strong> Generate new invoices effortlessly by searching for products, adding them to a list, and applying overall or item-specific discounts.</li>
+            <li><strong>Invoice History:</strong> All generated invoices are saved in a searchable history, allowing you to view and reprint them as needed.</li>
+            <li><strong>Returns:</strong> Process product returns, automatically update inventory, and generate credit notes for customers.</li>
+            <li><strong>Suppliers & Expenses:</strong> Manage your supplier database and track daily business expenses to get a clear picture of your finances.</li>
+            <li><strong>Reports & Analytics:</strong> Generate detailed daily or custom date-range reports to analyze sales, profit, and loss statements.</li>
+            <li><strong>Barcode Scanner:</strong> Quickly search for products by scanning their barcodes using your device's camera or by manual input, which also allows you to add products to an invoice instantly.</li>
+        </ul>
+    </div>
+</div>
         <div id="products" class="tab-content">
             <h2>👗 Product Management</h2>
             <form id="productForm" onsubmit="addProduct(event)">
