@@ -1412,7 +1412,7 @@ async function toggleScanner() {
     // Start scanning
     html5QrCode.start(
         { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 150 } },
+        { fps: 10, qrbox: { width: 400, height: 300 } },
         (decodedText, decodedResult) => {
             // Success callback when a barcode is scanned
             console.log(`Code matched = ${decodedText}`, decodedResult);
