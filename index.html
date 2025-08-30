@@ -54,9 +54,9 @@
         .print-row{ display:flex; justify-content:space-between; margin-bottom:5px; }
         .print-total{ border-top:2px solid #000; padding-top:10px; margin-top:10px; font-weight:bold; }
     </style>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -380,25 +380,22 @@
         </div>
         
         <div id="scanner" class="tab-content">
-            <h2>📱 Barcode Scanner</h2>
-            <div class="camera-scanner">
-                <h3>📷 Camera Scanner</h3>
-                <p>Click to start camera and scan barcodes</p>
-                <button class="btn" onclick="startCamera()">Start Camera</button>
-                <div id="cameraView" style="display: none;">
-                    <video id="video" width="100%" height="300" style="border-radius: 10px;"></video>
-                    <canvas id="canvas" style="display: none;"></canvas>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label>Or Enter Barcode Manually:</label>
-                <input type="text" id="manualBarcode" placeholder="Enter barcode..." onkeyup="if(event.key==='Enter') searchByBarcode()">
-                <button class="btn" onclick="searchByBarcode()">🔍 Search Product</button>
-            </div>
+    <h2>📱 Barcode Scanner</h2>
+    <div class="camera-scanner">
+        <h3>📷 Camera Scanner</h3>
+        <p>Click the button to start the camera and scan a barcode.</p>
+        <button class="btn" id="startScannerBtn" onclick="toggleScanner()">Start Scanner</button>
+        <div id="reader" style="width: 100%; display: none; margin-top: 20px;"></div>
+    </div>
+    
+    <div class="form-group" style="margin-top: 30px;">
+        <label>Or Enter Barcode Manually:</label>
+        <input type="text" id="manualBarcode" placeholder="Enter barcode..." onkeyup="if(event.key==='Enter') searchByBarcode()">
+        <button class="btn" onclick="searchByBarcode()">🔍 Search Product</button>
+    </div>
 
-            <div id="scannedResult"></div>
-        </div>
+    <div id="scannedResult"></div>
+</div>
     </div>
 
     <div id="printModal" class="modal">
@@ -1392,75 +1389,84 @@
     // -------------------------
     // Barcode / Scanner helpers (kept basic)
     // -------------------------
-   async function startCamera() {
-  const video = document.getElementById('video');
-  const cameraView = document.getElementById('cameraView');
-  const resultDiv = document.getElementById('scannedResult');
-  const codeReader = new ZXing.BrowserMultiFormatReader();
+   
+let html5QrCode = null;
 
-  resultDiv.innerHTML = '<p>Loading camera...</p>';
-  cameraView.style.display = 'block';
+async function toggleScanner() {
+    const scannerDiv = document.getElementById('reader');
+    const startButton = document.getElementById('startScannerBtn');
 
-  try {
-    const videoInputDevices = await codeReader.getVideoInputDevices();
-    const selectedDeviceId = videoInputDevices[0].deviceId;
+    if (html5QrCode && html5QrCode.isScanning) {
+        await html5QrCode.stop();
+        scannerDiv.style.display = 'none';
+        startButton.innerText = 'Start Scanner';
+        return;
+    }
+
+    // Initialize scanner and show container
+    scannerDiv.style.display = 'block';
+    startButton.innerText = 'Stop Scanner';
     
-    codeReader.decodeFromVideoDevice(selectedDeviceId, 'video', (result, err) => {
-      if (result) {
-        console.log('Found barcode:', result.text);
-        document.getElementById('manualBarcode').value = result.text;
-        searchByBarcode();
-        // Stop scanning after a successful scan
-        codeReader.reset();
-        cameraView.style.display = 'none';
-      }
-      if (err && !(err instanceof ZXing.NotFoundException)) {
-        console.error(err);
-        resultDiv.innerHTML = `<p style="color: red;">Error scanning: ${err.message}</p>`;
-      }
+    html5QrCode = new Html5Qrcode("reader");
+    
+    // Start scanning
+    html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 150 } },
+        (decodedText, decodedResult) => {
+            // Success callback when a barcode is scanned
+            console.log(`Code matched = ${decodedText}`, decodedResult);
+            document.getElementById('manualBarcode').value = decodedText;
+            searchByBarcode();
+            // Stop scanning after a successful scan
+            html5QrCode.stop().then(() => {
+                scannerDiv.style.display = 'none';
+                startButton.innerText = 'Start Scanner';
+            });
+        },
+        (errorMessage) => {
+            // Optional: You can handle scan errors here if needed
+        }
+    ).catch(err => {
+        console.error(`Failed to start scanner: ${err}`);
+        alert("Failed to start scanner. Please ensure your website is using HTTPS and you have granted camera permission.");
+        scannerDiv.style.display = 'none';
+        startButton.innerText = 'Start Scanner';
     });
-
-    resultDiv.innerHTML = '<p>Scanning for barcode...</p>';
-
-  } catch (err) {
-    console.error(err);
-    alert('Camera access denied or not available: ' + err.message);
-    cameraView.style.display = 'none';
-    resultDiv.innerHTML = `<p style="color: red;">Camera access denied or not available.</p>`;
-  }
 }
 
-    function searchByBarcode() {
-      const barcode = document.getElementById('manualBarcode').value;
-      const product = products.find(p => p.barcode === barcode);
-      const result = document.getElementById('scannedResult');
-      if (product) {
-        result.innerHTML = `
-          <div class="product-card">
-            <h3>Product Found!</h3>
-            ${product.image ? `<img src="${product.image}" alt="${product.name}">` : ''}
-            <div class="barcode-container"><svg id="scanned-barcode" class="barcode-svg"></svg></div>
-            <p><strong>Name:</strong> ${product.name}</p>
-            <p><strong>Category:</strong> ${product.category}</p>
-            <p><strong>Size:</strong> ${product.size || ''} | <strong>Color:</strong> ${product.color || ''}</p>
-            <p><strong>Price:</strong> ₹${product.selling_price || 0}</p>
-            <p><strong>Stock:</strong> ${product.quantity}</p>
-            <button class="btn" onclick="addProductToInvoice('${product.id}')">➕ Add to Invoice</button>
-            <button class="btn btn-info" onclick="printBarcode('scanned-barcode')">🖨️ Print Barcode</button>
-          </div>
-        `;
-        try {
-          JsBarcode("#scanned-barcode", product.barcode || '', { format: "CODE128", displayValue: true, lineColor: "#333", width:2, height:40, margin:10 });
-        } catch (e) {}
-      } else {
-        result.innerHTML = `
-          <div class="product-card" style="border:2px solid #ff6b6b;">
-            <h3>Product Not Found</h3>
-            <p>No product found with barcode: ${barcode}</p>
-          </div>
-        `;
-      }
-    }
+function searchByBarcode() {
+  const barcode = document.getElementById('manualBarcode').value;
+  const product = products.find(p => p.barcode === barcode);
+  const result = document.getElementById('scannedResult');
+  
+  if (product) {
+    result.innerHTML = `
+      <div class="product-card">
+        <h3>Product Found!</h3>
+        ${product.image ? `<img src="${product.image}" alt="${product.name}">` : ''}
+        <div class="barcode-container"><svg id="scanned-barcode" class="barcode-svg"></svg></div>
+        <p><strong>Name:</strong> ${product.name}</p>
+        <p><strong>Category:</strong> ${product.category}</p>
+        <p><strong>Size:</strong> ${product.size || ''} | <strong>Color:</strong> ${product.color || ''}</p>
+        <p><strong>Price:</strong> ₹${product.selling_price || 0}</p>
+        <p><strong>Stock:</strong> ${product.quantity}</p>
+        <button class="btn" onclick="addProductToInvoice('${product.id}')">➕ Add to Invoice</button>
+        <button class="btn btn-info" onclick="printBarcode('scanned-barcode')">🖨️ Print Barcode</button>
+      </div>
+    `;
+    try {
+      JsBarcode("#scanned-barcode", product.barcode || '', { format: "CODE128", displayValue: true, lineColor: "#333", width:2, height:40, margin:10 });
+    } catch (e) {}
+  } else {
+    result.innerHTML = `
+      <div class="product-card" style="border:2px solid #ff6b6b;">
+        <h3>Product Not Found</h3>
+        <p>No product found with barcode: ${barcode}</p>
+      </div>
+    `;
+  }
+}
     // Add these functions to your existing <script> block
 
 async function exportToExcel() {
