@@ -5,6 +5,104 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Soniya Dresses - Billing System (Supabase)</title>
     <style>
+     /* --- Dark Mode Overrides --- */
+body.dark-mode {
+  background: #1a1a2e;
+  color: #f0f0f0;
+}
+
+body.dark-mode .header {
+  background: #2a2a4a;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .header h1,
+body.dark-mode .header p {
+  color: #e0e0e0;
+}
+
+body.dark-mode .nav-tab {
+  background: #333;
+  color: #aaa;
+  box-shadow: none;
+}
+
+body.dark-mode .nav-tab:hover, 
+body.dark-mode .nav-tab.active {
+  background: #5a2e98;
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(90, 46, 152, 0.4);
+}
+
+body.dark-mode .tab-content {
+  background: #2a2a4a;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode label,
+body.dark-mode .search-icon {
+  color: #ddd;
+}
+
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  background: #333;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+body.dark-mode input:focus, 
+body.dark-mode select:focus, 
+body.dark-mode textarea:focus {
+  border-color: #bb86fc;
+  box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.3);
+}
+
+body.dark-mode .btn {
+  background: #bb86fc;
+  box-shadow: 0 5px 15px rgba(187, 134, 252, 0.2);
+  color: #333;
+}
+
+body.dark-mode .btn:hover {
+  background: #b05cff;
+  box-shadow: 0 10px 20px rgba(187, 134, 252, 0.4);
+}
+
+body.dark-mode .btn-secondary {
+  background: #555;
+  color: #e0e0e0;
+}
+
+body.dark-mode .product-card,
+body.dark-mode .stat-card,
+body.dark-mode .modal-content {
+  background: #2a2a4a;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .stat-card {
+  background: #5a2e98;
+  box-shadow: 0 10px 30px rgba(90, 46, 152, 0.4);
+}
+
+body.dark-mode .invoice-total {
+  background: #2a2a4a;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+  border: 1px solid #444;
+}
+
+body.dark-mode .invoice-item,
+body.dark-mode .expense-item {
+  border-bottom: 1px solid #333;
+}
+
+body.dark-mode .invoice-item input,
+body.dark-mode .expense-item input {
+  background: #222;
+  color: #f0f0f0;
+}
         /* (Same styles as your original file) */
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh; color:#333; }
@@ -65,7 +163,7 @@
         <div class="header">
             <h1>✨ Soniya Dresses</h1>
             <p>Main Road, Pandharkawda | Complete Billing & Inventory Solution</p>
-            <button id="darkModeToggle" class="btn" style="position: absolute; top: 20px; right: 20px;">🌙 Dark Mode</button>
+            <button id="darkModeToggle" class="btn" style="position: absolute; top: 20px; right: 20px;">🌙 Dark </button>
         </div>
 
         <div class="nav-tabs">
@@ -510,7 +608,7 @@
     let suppliers = [];
     let currentInvoiceItems = [];
     let invoiceCounter = 1; // not used for ID; invoices use uuid; kept for UI compatibility
-
+   
     // Utility: fallback UUID generator
     function makeUUID() {
       if (crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -561,7 +659,14 @@
       displayLowStockAlerts();
       updateDashboard();
     }
-
+      document.addEventListener('DOMContentLoaded', (event) => {
+  const darkModeToggle = document.getElementById('darkModeToggle');
+  if (darkModeToggle) {
+    darkModeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+    });
+  }
+});
     async function loadSuppliers() {
       const { data, error } = await supabase.from('suppliers').select('*');
       if (error) {
@@ -1594,9 +1699,6 @@ async function handleExcelImport(event) {
   await loadSuppliers();
   await loadReturns();
 
-  // Wire up dark mode toggle
-  const dmBtn = document.getElementById('darkModeToggle');
-  dmBtn.addEventListener('click', () => document.body.classList.toggle('dark-mode'));
 });
 
     // End of script
