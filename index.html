@@ -1,0 +1,1579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Soniya Dresses - Billing System (Supabase)</title>
+    <style>
+        /* (Same styles as your original file) */
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh; color:#333; }
+        .container{ max-width:1400px;margin:0 auto;padding:20px; }
+        .header{ background: rgba(255,255,255,0.95);backdrop-filter: blur(10px);border-radius:20px;padding:30px;margin-bottom:30px;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,0.1); }
+        .header h1{ color:#667eea;font-size:2.5rem;margin-bottom:10px;font-weight:700; }
+        .header p{ color:#666;font-size:1.1rem; }
+        .nav-tabs{ display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:30px; }
+        .nav-tab{ background: rgba(255,255,255,0.9); border:none; padding:15px 25px;border-radius:50px; cursor:pointer; font-weight:600; transition:all .3s; color:#667eea; font-size:.95rem; }
+        .nav-tab:hover, .nav-tab.active{ background:#667eea; color:white; transform:translateY(-2px); box-shadow:0 10px 20px rgba(102,126,234,.3); }
+        .tab-content{ display:none; background: rgba(255,255,255,0.95);backdrop-filter: blur(10px);border-radius:20px;padding:30px;box-shadow:0 20px 40px rgba(0,0,0,0.1); }
+        .tab-content.active{ display:block; animation:fadeIn .3s ease; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+        .form-group{ margin-bottom:20px; }
+        .form-row{ display:grid; grid-template-columns: repeat(auto-fit,minmax(250px,1fr)); gap:20px; margin-bottom:20px; }
+        label{ display:block;margin-bottom:8px;font-weight:600;color:#555; }
+        input, select, textarea { width:100%; padding:12px 15px; border:2px solid #e1e5e9; border-radius:10px; font-size:16px; transition:all .3s ease; background: rgba(255,255,255,0.9); }
+        input:focus, select:focus, textarea:focus { outline:none; border-color:#667eea; box-shadow:0 0 0 3px rgba(102,126,234,.1); }
+        .btn{ background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; border:none; padding:12px 25px; border-radius:25px; cursor:pointer; font-weight:600; transition:all .3s; margin:5px; font-size:14px; }
+        .btn:hover{ transform:translateY(-2px); box-shadow:0 10px 20px rgba(102,126,234,.3); }
+        .btn-secondary{ background: linear-gradient(135deg,#ffecd2 0%,#fcb69f 100%); color:#333; }
+        .btn-danger{ background: linear-gradient(135deg,#ff9a9e 0%,#fecfef 100%); color:#333; }
+        .btn-success{ background: linear-gradient(135deg,#a8edea 0%,#fed6e3 100%); color:#333; }
+        .product-grid{ display:grid; grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); gap:20px; margin-top:20px; }
+        .product-card{ background: rgba(255,255,255,0.9); border-radius:15px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,0.1); transition:all .3s ease; }
+        .product-card img { max-width:100%; height:auto; border-radius:10px; margin-bottom:15px; }
+        .product-card:hover{ transform:translateY(-5px); box-shadow:0 20px 40px rgba(0,0,0,0.15); }
+        .barcode-container{text-align:center;margin:10px 0;}
+        .barcode-svg{ max-width:100%; height:auto; }
+        .invoice-item{ display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr auto; gap:10px; align-items:center; padding:10px; border-bottom:1px solid #eee; }
+        .expense-item{ display:grid; grid-template-columns:1fr 1fr 2fr 1fr auto; gap:10px; align-items:center; padding:10px; border-bottom:1px solid #eee; }
+        .invoice-total{ background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:20px; border-radius:15px; margin-top:20px; text-align:right; }
+        .search-bar{ position:relative; margin-bottom:20px; }
+        .search-bar input{ padding-left:50px; }
+        .search-icon{ position:absolute; left:15px; top:50%; transform:translateY(-50%); color:#999; }
+        .stats-grid{ display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:20px; margin-bottom:30px; }
+        .stat-card{ background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:25px; border-radius:15px; text-align:center; box-shadow:0 10px 30px rgba(102,126,234,.3); }
+        .stat-number{ font-size:2rem; font-weight:bold; margin-bottom:5px; }
+        .camera-scanner{ background:#f8f9fa; border:2px dashed #667eea; border-radius:15px; padding:30px; text-align:center; margin:20px 0; }
+        .modal{ display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px); }
+        .modal-content{ background:white; margin:5% auto; padding:30px; border-radius:20px; width:90%; max-width:800px; max-height:80vh; overflow-y:auto; }
+        .close{ color:#aaa; float:right; font-size:28px; font-weight:bold; cursor:pointer; }
+        .close:hover{ color:#000; }
+        @media (max-width:768px){ .header h1{ font-size:2rem } .nav-tabs{ flex-direction:column } .nav-tab{ width:100%; text-align:center } .form-row{ grid-template-columns:1fr } .invoice-item, .expense-item{ grid-template-columns:1fr; gap:5px; text-align:center } .product-grid{ grid-template-columns:1fr } }
+        .print-invoice{ background:white; padding:20px; font-family:'Courier New', monospace; font-size:12px; line-height:1.4; max-width:300px; margin:0 auto; }
+        .print-header{ text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:15px; }
+        .print-row{ display:flex; justify-content:space-between; margin-bottom:5px; }
+        .print-total{ border-top:2px solid #000; padding-top:10px; margin-top:10px; font-weight:bold; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✨ Soniya Dresses</h1>
+            <p>Main Road, Pandharkawda | Complete Billing & Inventory Solution</p>
+            <button id="darkModeToggle" class="btn" style="position: absolute; top: 20px; right: 20px;">🌙 Dark Mode</button>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('dashboard', this)">📊 Dashboard</button>
+            <button class="nav-tab" onclick="showTab('products', this)">👗 Products</button>
+            <button class="nav-tab" onclick="showTab('inventory', this)">📦 Inventory</button>
+            <button class="nav-tab" onclick="showTab('alerts', this)">🚨 Alerts</button>
+            <button class="nav-tab" onclick="showTab('billing', this)">💳 Billing</button>
+            <button class="nav-tab" onclick="showTab('returns', this)">🔄 Returns</button>
+            <button class="nav-tab" onclick="showTab('suppliers', this)">🤝 Suppliers</button>
+            <button class="nav-tab" onclick="showTab('invoices', this)">📋 Invoice History</button>
+            <button class="nav-tab" onclick="showTab('scanner', this)">📱 Scanner</button>
+            <button class="nav-tab" onclick="showTab('expenses', this)">💸 Expenses</button>
+        </div>
+
+        <div id="dashboard" class="tab-content active">
+            <h2>📊 Dashboard Overview</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalProducts">0</div>
+                    <div>Total Products</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalStock">0</div>
+                    <div>Items in Stock</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalInvoices">0</div>
+                    <div>Total Invoices</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="todaySales">₹0</div>
+                    <div>Today's Sales</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalProfit">₹0</div>
+                    <div>Total Profit</div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <button class="btn" onclick="exportToExcel()">📥 Export All Data to Excel</button>
+                <button class="btn btn-secondary" onclick="importFromExcel()">📤 Import Data from Excel</button>
+                <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;" onchange="handleExcelImport(event)">
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <h3>Top 5 Best-Selling Products</h3>
+                <div id="best-selling-products" class="product-grid"></div>
+            </div>
+        </div>
+
+        <div id="products" class="tab-content">
+            <h2>👗 Product Management</h2>
+            <form id="productForm" onsubmit="addProduct(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Product Name:</label>
+                        <input type="text" id="productName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category:</label>
+                        <select id="productCategory" required>
+                            <option value="">Select Category</option>
+                            <option value="Sarees">Sarees</option>
+                            <option value="Kurtis">Kurtis</option>
+                            <option value="Lehenga">Lehenga</option>
+                            <option value="Salwar Suits">Salwar Suits</option>
+                            <option value="Tops">Tops</option>
+                            <option value="Dresses">Dresses</option>
+                            <option value="Accessories">Accessories</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Size:</label>
+                        <select id="productSize" required>
+                            <option value="">Select Size</option>
+                            <option value="XS">XS</option>
+                            <option value="S">S</option>
+                            <option value="M">M</option>
+                            <option value="L">L</option>
+                            <option value="XL">XL</option>
+                            <option value="XXL">XXL</option>
+                            <option value="Free Size">Free Size</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Color:</label>
+                        <input type="text" id="productColor" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Purchase Price:</label>
+                        <input type="number" id="purchasePrice" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Selling Price:</label>
+                        <input type="number" id="sellingPrice" step="0.01" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quantity:</label>
+                        <input type="number" id="productQuantity" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Supplier:</label>
+                        <input type="text" id="productSupplier">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Product Image:</label>
+                        <input type="file" id="productImage" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <label>Low Stock Threshold:</label>
+                        <input type="number" id="productThreshold" value="5" min="0">
+                    </div>
+                </div>
+                <button type="submit" class="btn">➕ Add Product</button>
+            </form>
+
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="productSearch" placeholder="Search products..." oninput="searchProducts()">
+            </div>
+
+            <div id="productsList" class="product-grid"></div>
+        </div>
+
+        <div id="inventory" class="tab-content">
+            <h2>📦 Inventory Management</h2>
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="inventorySearch" placeholder="Search inventory..." oninput="searchInventory()">
+            </div>
+            <div id="inventoryList"></div>
+        </div>
+
+        <div id="alerts" class="tab-content">
+            <h2>🚨 Low Stock Alerts</h2>
+            <div id="lowStockAlertsList" class="product-grid">
+                <p>No low stock alerts at this time. All good!</p>
+            </div>
+        </div>
+
+        <div id="billing" class="tab-content">
+            <h2>💳 Create Invoice</h2>
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="productSearchBilling" placeholder="Search products to add..." oninput="searchProductsForBilling()" autocomplete="off">
+                <div id="productSuggestions" style="display: none; position: absolute; background: white; border: 1px solid #ddd; border-radius: 5px; max-height: 200px; overflow-y: auto; width: 100%; z-index: 10;"></div>
+            </div>
+
+            <div id="invoiceItems">
+                <div class="invoice-item" style="font-weight: bold; background: #f8f9fa;">
+                    <div>Product</div>
+                    <div>Price</div>
+                    <div>Qty</div>
+                    <div>Discount%</div>
+                    <div>Total</div>
+                    <div>Action</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Overall Discount (%):</label>
+                <input type="number" id="overallDiscount" value="0" min="0" max="100" onchange="calculateTotal()">
+            </div>
+
+            <div class="invoice-total">
+                <div>Subtotal: ₹<span id="subtotal">0.00</span></div>
+                <div>Discount: -₹<span id="discountAmount">0.00</span></div>
+                <div style="font-size: 1.2rem; font-weight: bold;">Total: ₹<span id="totalAmount">0.00</span></div>
+            </div>
+
+            <div class="form-group">
+                <button class="btn btn-success" onclick="generateInvoice()">🧾 Generate Invoice</button>
+                <button class="btn btn-secondary" onclick="clearBilling()">🗑️ Clear All</button>
+            </div>
+        </div>
+        
+        <div id="returns" class="tab-content">
+            <h2>🔄 Product Returns</h2>
+            <form id="returnForm" onsubmit="processReturn(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Product Barcode/ID:</label>
+                        <input type="text" id="returnBarcode" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Quantity to Return:</label>
+                        <input type="number" id="returnQuantity" min="1" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Reason for Return:</label>
+                    <textarea id="returnReason" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn">Process Return</button>
+            </form>
+            <div id="returnsList" style="margin-top: 20px;">
+                <h3>Return History</h3>
+                <div class="product-card">No returns have been processed yet.</div>
+            </div>
+        </div>
+        
+        <div id="suppliers" class="tab-content">
+            <h2>🤝 Supplier Management</h2>
+            <form id="supplierForm" onsubmit="addSupplier(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Supplier Name:</label>
+                        <input type="text" id="supplierName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Contact Person:</label>
+                        <input type="text" id="supplierContact">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Contact Info (Phone/Email):</label>
+                    <input type="text" id="supplierInfo">
+                </div>
+                <button type="submit" class="btn">Add Supplier</button>
+            </form>
+            <div id="suppliersList" style="margin-top: 20px;">
+                <h3>Supplier Database</h3>
+                <div class="product-grid"></div>
+            </div>
+        </div>
+
+        <div id="invoices" class="tab-content">
+            <h2>📋 Invoice History</h2>
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="invoiceSearch" placeholder="Search invoices..." oninput="searchInvoices()">
+            </div>
+            <div id="invoicesList"></div>
+        </div> 
+
+        <div id="expenses" class="tab-content">
+            <h2>💸 Daily Expenses</h2>
+            <form id="expenseForm" onsubmit="addExpense(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date:</label>
+                        <input type="date" id="expenseDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category:</label>
+                        <select id="expenseCategory" required>
+                            <option value="">Select Category</option>
+                            <option value="Rent">Rent</option>
+                            <option value="Salaries">Salaries</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Supplies">Supplies</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Travel">Travel</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Description:</label>
+                        <input type="text" id="expenseDescription" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount:</label>
+                        <input type="number" id="expenseAmount" step="0.01" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn">➕ Add Expense</button>
+            </form>
+            <div style="margin-top: 20px;">
+                <h3>Expense History</h3>
+                <div id="expensesList" class="product-card">
+                    <div class="expense-item" style="font-weight: bold; background: #f8f9fa;">
+                        <div>Date</div>
+                        <div>Category</div>
+                        <div>Description</div>
+                        <div>Amount</div>
+                        <div>Action</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="scanner" class="tab-content">
+            <h2>📱 Barcode Scanner</h2>
+            <div class="camera-scanner">
+                <h3>📷 Camera Scanner</h3>
+                <p>Click to start camera and scan barcodes</p>
+                <button class="btn" onclick="startCamera()">Start Camera</button>
+                <div id="cameraView" style="display: none;">
+                    <video id="video" width="100%" height="300" style="border-radius: 10px;"></video>
+                    <canvas id="canvas" style="display: none;"></canvas>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Or Enter Barcode Manually:</label>
+                <input type="text" id="manualBarcode" placeholder="Enter barcode..." onkeyup="if(event.key==='Enter') searchByBarcode()">
+                <button class="btn" onclick="searchByBarcode()">🔍 Search Product</button>
+            </div>
+
+            <div id="scannedResult"></div>
+        </div>
+    </div>
+
+    <div id="printModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closePrintModal()">&times;</span>
+            <div id="printableInvoice"></div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" onclick="printInvoice()">🖨️ Print Invoice</button>
+                <button class="btn btn-secondary" onclick="downloadInvoice()">📥 Download PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- External libs -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+    <script>
+    /*
+     * ------------------------
+     *  SUPABASE + STORAGE HTML
+     * ------------------------
+     *
+     * 1) SQL schemas (run in Supabase SQL editor)
+     *
+     * -- Enable the extension for gen_random_uuid() if needed:
+     * create extension if not exists "pgcrypto";
+     *
+     * create table products (
+     *   id uuid primary key default gen_random_uuid(),
+     *   name text not null,
+     *   category text not null,
+     *   size text,
+     *   color text,
+     *   purchase_price numeric,
+     *   selling_price numeric,
+     *   quantity int default 0,
+     *   supplier text,
+     *   barcode text unique,
+     *   date_added date default now(),
+     *   image text,
+     *   min_stock_quantity int default 5
+     * );
+     *
+     * create table suppliers (
+     *   id uuid primary key default gen_random_uuid(),
+     *   name text not null,
+     *   contact_person text,
+     *   contact_info text
+     * );
+     *
+     * create table invoices (
+     *   id uuid primary key default gen_random_uuid(),
+     *   invoice_number serial unique,
+     *   date timestamptz default now(),
+     *   subtotal numeric,
+     *   discount numeric,
+     *   total numeric
+     * );
+     *
+     * create table invoice_items (
+     *   id uuid primary key default gen_random_uuid(),
+     *   invoice_id uuid references invoices(id) on delete cascade,
+     *   product_id uuid references products(id),
+     *   name text,
+     *   size text,
+     *   color text,
+     *   price numeric,
+     *   purchase_price numeric,
+     *   quantity int,
+     *   discount numeric,
+     *   total numeric
+     * );
+     *
+     * create table expenses (
+     *   id uuid primary key default gen_random_uuid(),
+     *   date date not null,
+     *   category text not null,
+     *   description text,
+     *   amount numeric not null
+     * );
+     *
+     * create table returns (
+     *   id uuid primary key default gen_random_uuid(),
+     *   date timestamptz default now(),
+     *   product_id uuid references products(id),
+     *   product_name text,
+     *   barcode text,
+     *   quantity int,
+     *   reason text,
+     *   credit_amount numeric
+     * );
+     *
+     * 2) Create a Storage Bucket in Supabase named: product-images
+     *    Make it public (or configure signed URLs and adapt code).
+     *
+     * ------------------------
+     * Replace the two placeholders below with:
+     *   SUPABASE_URL and SUPABASE_KEY (anon public API key)
+     * ------------------------
+     */
+
+    const SUPABASE_URL = "https://fmxrnqaauabwpgqibbgo.supabase.co"; // <-- replace
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZteHJucWFhdWFid3BncWliYmdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY1NTQxMjMsImV4cCI6MjA3MjEzMDEyM30.nSPmqoXZa4htX0_h7jOCW0XrHzomFbEZFkZSchvU7bk"; // <-- replace (anon key)
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Application state arrays (populated from Supabase)
+    let products = [];
+    let invoices = [];
+    let expenses = [];
+    let returnsArr = [];
+    let suppliers = [];
+    let currentInvoiceItems = [];
+    let invoiceCounter = 1; // not used for ID; invoices use uuid; kept for UI compatibility
+
+    // Utility: fallback UUID generator
+    function makeUUID() {
+      if (crypto && crypto.randomUUID) return crypto.randomUUID();
+      return 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2,8);
+    }
+
+    // -------------------------
+    // Storage: upload image and return public URL
+    // -------------------------
+    async function uploadImage(file, productId) {
+      if (!file) return null;
+      try {
+        const ext = file.name.split('.').pop();
+        // make unique filename using productId and timestamp
+        const fileName = `product-${productId}-${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(fileName, file, { upsert: true });
+        if (uploadError) {
+          console.error('Upload error', uploadError);
+          alert('Image upload failed: ' + uploadError.message);
+          return null;
+        }
+        const { data } = supabase.storage.from('product-images').getPublicUrl(fileName);
+        return data?.publicUrl || null;
+      } catch (err) {
+        console.error('uploadImage exception', err);
+        return null;
+      }
+    }
+
+    // -------------------------
+    // Loaders: load data from Supabase
+    // -------------------------
+    async function loadProducts() {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('date_added', { ascending: false });
+      if (error) {
+        console.error('loadProducts error', error);
+        products = [];
+      } else {
+        products = data || [];
+      }
+      displayProducts();
+      displayInventory();
+      displayLowStockAlerts();
+      updateDashboard();
+    }
+
+    async function loadSuppliers() {
+      const { data, error } = await supabase.from('suppliers').select('*');
+      if (error) {
+        console.error('loadSuppliers error', error);
+        suppliers = [];
+      } else suppliers = data || [];
+      displaySuppliers();
+    }
+
+    async function loadExpenses() {
+      const { data, error } = await supabase.from('expenses').select('*').order('date', { ascending: false });
+      if (error) {
+        console.error('loadExpenses error', error);
+        expenses = [];
+      } else expenses = data || [];
+      displayExpenses();
+      updateDashboard();
+    }
+
+    // fetch invoices together with their items
+    async function loadInvoices() {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*, invoice_items(*)')
+        .order('date', { ascending: false });
+      if (error) {
+        console.error('loadInvoices error', error);
+        invoices = [];
+      } else invoices = data || [];
+      displayInvoices();
+      updateDashboard();
+    }
+
+    async function loadReturns() {
+      const { data, error } = await supabase.from('returns').select('*').order('date', { ascending: false });
+      if (error) {
+        console.error('loadReturns error', error);
+        returnsArr = [];
+      } else returnsArr = data || [];
+      displayReturns();
+    }
+
+    // -------------------------
+    // Product CRUD
+    // -------------------------
+    async function addProduct(event) {
+      event.preventDefault();
+      // generate product id client-side
+      const productId = makeUUID();
+
+      const product = {
+        id: productId,
+        name: document.getElementById('productName').value,
+        category: document.getElementById('productCategory').value,
+        size: document.getElementById('productSize').value,
+        color: document.getElementById('productColor').value,
+        purchase_price: parseFloat(document.getElementById('purchasePrice').value) || 0,
+        selling_price: parseFloat(document.getElementById('sellingPrice').value) || 0,
+        quantity: parseInt(document.getElementById('productQuantity').value) || 0,
+        supplier: document.getElementById('productSupplier').value || null,
+        barcode: generateBarcode(),
+        date_added: new Date().toISOString().split('T')[0],
+        image: null,
+        min_stock_quantity: parseInt(document.getElementById('productThreshold').value) || 5
+      };
+
+      // Insert product (without image first)
+      const { error: insertError } = await supabase.from('products').insert([product]);
+      if (insertError) {
+        console.error('addProduct insert error', insertError);
+        alert('Error adding product: ' + insertError.message);
+        return;
+      }
+
+      // If image exists, upload and update
+      const file = document.getElementById('productImage').files[0];
+      if (file) {
+        const imageUrl = await uploadImage(file, productId);
+        if (imageUrl) {
+          const { error: updateErr } = await supabase.from('products').update({ image: imageUrl }).eq('id', productId);
+          if (updateErr) console.error('update after upload error', updateErr);
+        }
+      }
+
+      document.getElementById('productForm').reset();
+      alert('Product added successfully!');
+      await loadProducts();
+    }
+
+    async function editProduct(productId) {
+      // Fill form with product data and set onsubmit to update
+      const product = products.find(p => p.id === productId);
+      if (!product) return;
+      document.getElementById('productName').value = product.name || '';
+      document.getElementById('productCategory').value = product.category || '';
+      document.getElementById('productSize').value = product.size || '';
+      document.getElementById('productColor').value = product.color || '';
+      document.getElementById('purchasePrice').value = product.purchase_price || '';
+      document.getElementById('sellingPrice').value = product.selling_price || '';
+      document.getElementById('productQuantity').value = product.quantity || 0;
+      document.getElementById('productSupplier').value = product.supplier || '';
+      document.getElementById('productThreshold').value = product.min_stock_quantity || 5;
+
+      const form = document.getElementById('productForm');
+      form.onsubmit = async function(ev) {
+        ev.preventDefault();
+        await updateProduct(productId);
+      };
+
+      // Switch tab
+      showTab('products', document.querySelector('[onclick*="products"]'));
+    }
+  
+    async function updateProduct(productId) {
+      const values = {
+        name: document.getElementById('productName').value,
+        category: document.getElementById('productCategory').value,
+        size: document.getElementById('productSize').value,
+        color: document.getElementById('productColor').value,
+        purchase_price: parseFloat(document.getElementById('purchasePrice').value) || 0,
+        selling_price: parseFloat(document.getElementById('sellingPrice').value) || 0,
+        quantity: parseInt(document.getElementById('productQuantity').value) || 0,
+        supplier: document.getElementById('productSupplier').value || null,
+        min_stock_quantity: parseInt(document.getElementById('productThreshold').value) || 5
+      };
+
+      // If a new image was selected upload it and include in update
+      const file = document.getElementById('productImage').files[0];
+      if (file) {
+        const url = await uploadImage(file, productId);
+        if (url) values.image = url;
+      }
+
+      const { error } = await supabase.from('products').update(values).eq('id', productId);
+      if (error) {
+        console.error('updateProduct error', error);
+        alert('Error updating product: ' + error.message);
+      } else {
+        alert('Product updated successfully!');
+        document.getElementById('productForm').onsubmit = addProduct; // reset
+        document.getElementById('productForm').reset();
+        await loadProducts();
+      }
+    }
+
+    async function deleteProduct(productId) {
+      if (!confirm('Are you sure you want to delete this product?')) return;
+      const { error } = await supabase.from('products').delete().eq('id', productId);
+      if (error) {
+        console.error('deleteProduct error', error);
+        alert('Error deleting product: ' + error.message);
+      } else {
+        await loadProducts();
+      }
+    }
+    function downloadInvoice() {
+  const element = document.getElementById('printableInvoice');
+  const opt = {
+    margin: [10, 5, 10, 5],
+    filename: 'invoice.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a5', orientation: 'portrait' }
+  };
+  html2pdf().from(element).set(opt).save();
+}
+
+    // -------------------------
+    // Display functions (use existing UI functions but reading from arrays)
+    // -------------------------
+    function displayProducts() {
+      const productsList = document.getElementById('productsList');
+      const searchTerm = document.getElementById('productSearch')?.value.toLowerCase() || '';
+
+      const filteredProducts = products.filter(product =>
+          (product.name || '').toLowerCase().includes(searchTerm) ||
+          (product.category || '').toLowerCase().includes(searchTerm) ||
+          (product.barcode || '').toLowerCase().includes(searchTerm)
+      );
+
+      productsList.innerHTML = filteredProducts.map(product => `
+          <div class="product-card">
+              ${product.image ? `<img src="${product.image}" alt="${product.name}">` : ''}
+              <h3>${product.name}</h3>
+              <div class="barcode-container">
+                  <svg id="barcode-${product.id}" class="barcode-svg"></svg>
+              </div>
+              <p><strong>Category:</strong> ${product.category}</p>
+              <p><strong>Size:</strong> ${product.size} | <strong>Color:</strong> ${product.color}</p>
+              <p><strong>Price:</strong> ₹${product.selling_price || 0} | <strong>Stock:</strong> ${product.quantity}</p>
+              <p><strong>Supplier:</strong> ${product.supplier || ''}</p>
+              <div>
+                  <button class="btn btn-secondary" onclick="editProduct('${product.id}')">✏️ Edit</button>
+                  <button class="btn btn-danger" onclick="deleteProduct('${product.id}')">🗑️ Delete</button>
+                  <button class="btn btn-info" onclick="printBarcode('barcode-${product.id}')">🖨️ Print Barcode</button>
+              </div>
+          </div>
+      `).join('');
+
+      // Generate barcode svgs after rendering
+      filteredProducts.forEach(product => {
+        try {
+          JsBarcode(`#barcode-${product.id}`, product.barcode || '', {
+            format: "CODE128",
+            displayValue: true,
+            lineColor: "#333",
+            width: 2,
+            height: 40,
+            margin: 10
+          });
+        } catch (e) {
+          // ignore barcode errors
+        }
+      });
+    }
+
+    function searchProducts(){ displayProducts(); }
+    function searchInventory(){ displayInventory(); }
+
+    function displayInventory() {
+      const inventoryList = document.getElementById('inventoryList');
+      const searchTerm = document.getElementById('inventorySearch')?.value.toLowerCase() || '';
+      const filteredProducts = products.filter(product =>
+          (product.name || '').toLowerCase().includes(searchTerm) ||
+          (product.barcode || '').toLowerCase().includes(searchTerm)
+      );
+
+      inventoryList.innerHTML = `
+          <div class="invoice-item" style="font-weight: bold; background: #f8f9fa; margin-bottom: 10px;">
+              <div>Product</div>
+              <div>Barcode</div>
+              <div>Category</div>
+              <div>Stock</div>
+              <div>Value</div>
+              <div>Status</div>
+          </div>
+          ${filteredProducts.map(product => {
+              const status = product.quantity < (product.min_stock_quantity || 5) ? 'Low Stock' : product.quantity === 0 ? 'Out of Stock' : 'In Stock';
+              const statusColor = product.quantity < (product.min_stock_quantity || 5) ? '#ff6b6b' : product.quantity === 0 ? '#ff4757' : '#2ed573';
+              return `
+                  <div class="invoice-item">
+                      <div>${product.name} (${product.size || ''}, ${product.color || ''})</div>
+                      <div>${product.barcode || ''}</div>
+                      <div>${product.category || ''}</div>
+                      <div>${product.quantity}</div>
+                      <div>₹${((product.selling_price || 0) * (product.quantity || 0)).toFixed(2)}</div>
+                      <div style="color: ${statusColor}; font-weight: bold;">${status}</div>
+                  </div>
+              `;
+          }).join('')}
+      `;
+    }
+
+    function displayLowStockAlerts() {
+      const alertsList = document.getElementById('lowStockAlertsList');
+      const lowStockProducts = products.filter(p => p.quantity <= (p.min_stock_quantity || 5) && p.quantity > 0);
+      if (lowStockProducts.length > 0) {
+        alertsList.innerHTML = lowStockProducts.map(product => `
+            <div class="product-card">
+                <h3>${product.name}</h3>
+                <p><strong>Barcode:</strong> ${product.barcode}</p>
+                <p><strong>Category:</strong> ${product.category}</p>
+                <p><strong>Current Stock:</strong> <span style="color: #ff4757; font-weight: bold;">${product.quantity}</span></p>
+                <p><strong>Threshold:</strong> ${product.min_stock_quantity || 5}</p>
+                <button class="btn" onclick="editProduct('${product.id}')">✏️ Reorder</button>
+            </div>
+        `).join('');
+      } else {
+        alertsList.innerHTML = '<p>No low stock alerts at this time. All good!</p>';
+      }
+    }
+
+    // -------------------------
+    // Billing / Invoice functions
+    // -------------------------
+    function searchProductsForBilling() {
+      const searchTerm = document.getElementById('productSearchBilling').value.toLowerCase();
+      const suggestions = document.getElementById('productSuggestions');
+      if (searchTerm.length < 2) {
+        suggestions.style.display = 'none';
+        return;
+      }
+      const filteredProducts = products.filter(p =>
+          (p.name || '').toLowerCase().includes(searchTerm) ||
+          (p.barcode || '').toLowerCase().includes(searchTerm)
+      ).filter(p => p.quantity > 0);
+
+      let suggestionsHtml = '';
+      if (filteredProducts.length > 0) {
+        suggestionsHtml = filteredProducts.map(p => `
+          <div style="padding:10px;border-bottom:1px solid #eee;cursor:pointer;" onclick="addProductToInvoice('${p.id}')">
+            ${p.name} - ${p.barcode || ''} (Stock: ${p.quantity})
+          </div>
+        `).join('');
+      } else {
+        suggestionsHtml = '<div style="padding:10px;color:#888;">No products found.</div>';
+      }
+      suggestions.innerHTML = suggestionsHtml;
+      suggestions.style.display = 'block';
+    }
+
+    function addProductToInvoice(productId) {
+      const product = products.find(p => p.id === productId);
+      if (!product) return;
+
+      const existingItem = currentInvoiceItems.find(item => item.productId === productId);
+      if (existingItem) {
+        if (existingItem.quantity < product.quantity) {
+          existingItem.quantity++;
+          existingItem.total = existingItem.price * existingItem.quantity * (1 - existingItem.discount/100);
+        } else {
+          alert('Not enough stock available!');
+          return;
+        }
+      } else {
+        currentInvoiceItems.push({
+          productId: productId,
+          name: product.name,
+          size: product.size,
+          color: product.color,
+          price: product.selling_price || 0,
+          purchasePrice: product.purchase_price || 0,
+          quantity: 1,
+          discount: 0,
+          total: product.selling_price || 0
+        });
+      }
+      document.getElementById('productSearchBilling').value = '';
+      document.getElementById('productSuggestions').style.display = 'none';
+      displayInvoiceItems();
+    }
+
+    function displayInvoiceItems() {
+      const invoiceItems = document.getElementById('invoiceItems');
+      const header = `
+        <div class="invoice-item" style="font-weight: bold; background: #f8f9fa;">
+            <div>Product</div>
+            <div>Price</div>
+            <div>Qty</div>
+            <div>Discount%</div>
+            <div>Total</div>
+            <div>Action</div>
+        </div>
+      `;
+      const items = currentInvoiceItems.map((item, index) => `
+        <div class="invoice-item">
+            <div>${item.name} (${item.size || ''}, ${item.color || ''})</div>
+            <div>₹${item.price}</div>
+            <div>
+                <input type="number" value="${item.quantity}" min="1" onchange="updateItemQuantity(${index}, this.value)" style="width:60px;padding:5px;">
+            </div>
+            <div>
+                <input type="number" value="${item.discount}" min="0" max="100" onchange="updateItemDiscount(${index}, this.value)" style="width:60px;padding:5px;">
+            </div>
+            <div>₹${item.total.toFixed(2)}</div>
+            <div>
+                <button class="btn btn-danger" onclick="removeItemFromInvoice(${index})">❌</button>
+            </div>
+        </div>
+      `).join('');
+      invoiceItems.innerHTML = header + items;
+      calculateTotal();
+    }
+
+    function updateItemQuantity(index, quantity) {
+      const item = currentInvoiceItems[index];
+      const product = products.find(p => p.id === item.productId);
+      if (quantity > product.quantity) {
+        alert('Not enough stock available!');
+        return;
+      }
+      item.quantity = parseInt(quantity);
+      item.total = item.price * item.quantity * (1 - item.discount/100);
+      displayInvoiceItems();
+    }
+
+    function updateItemDiscount(index, discount) {
+      const item = currentInvoiceItems[index];
+      item.discount = parseFloat(discount);
+      item.total = item.price * item.quantity * (1 - item.discount/100);
+      displayInvoiceItems();
+    }
+
+    function removeItemFromInvoice(index) {
+      currentInvoiceItems.splice(index,1);
+      displayInvoiceItems();
+    }
+
+    function calculateTotal() {
+      const subtotal = currentInvoiceItems.reduce((sum,item) => sum + item.total, 0);
+      const overallDiscount = parseFloat(document.getElementById('overallDiscount').value) || 0;
+      const discountAmount = (subtotal * overallDiscount) / 100;
+      const total = subtotal - discountAmount;
+      document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+      document.getElementById('discountAmount').textContent = discountAmount.toFixed(2);
+      document.getElementById('totalAmount').textContent = total.toFixed(2);
+    }
+
+    async function generateInvoice() {
+      if (currentInvoiceItems.length === 0) {
+        alert('Please add at least one product.');
+        return;
+      }
+      const invoiceObj = {
+        subtotal: parseFloat(document.getElementById('subtotal').textContent),
+        discount: parseFloat(document.getElementById('discountAmount').textContent),
+        total: parseFloat(document.getElementById('totalAmount').textContent),
+        items: [...currentInvoiceItems]
+      };
+
+      // Insert invoice
+      const { data: invoiceData, error: invoiceError } = await supabase.from('invoices').insert([{
+        subtotal: invoiceObj.subtotal,
+        discount: invoiceObj.discount,
+        total: invoiceObj.total
+      }]).select('id').single();
+
+      if (invoiceError) {
+        console.error('generateInvoice insert invoice error', invoiceError);
+        alert('Error saving invoice: ' + invoiceError.message);
+        return;
+      }
+
+      const invoiceId = invoiceData.id;
+      // Prepare invoice_items
+      const items = invoiceObj.items.map(i => ({
+        invoice_id: invoiceId,
+        product_id: i.productId,
+        name: i.name,
+        size: i.size,
+        color: i.color,
+        price: i.price,
+        purchase_price: i.purchasePrice,
+        quantity: i.quantity,
+        discount: i.discount,
+        total: i.total
+      }));
+
+      const { error: itemsErr } = await supabase.from('invoice_items').insert(items);
+      if (itemsErr) {
+        console.error('generateInvoice insert items error', itemsErr);
+        // not aborting, but notify
+      }
+
+      // Update stock for each product
+      for (const item of invoiceObj.items) {
+        try {
+          const product = products.find(p => p.id === item.productId);
+          if (product) {
+            const newQty = (product.quantity || 0) - item.quantity;
+            await supabase.from('products').update({ quantity: newQty }).eq('id', product.id);
+          }
+        } catch (err) {
+          console.error('Error updating product qty for', item.productId, err);
+        }
+      }
+
+      // Refresh data and show invoice
+      await loadProducts();
+      await loadInvoices();
+
+      // Build invoice object for print
+      const printedInvoice = {
+        id: invoiceId,
+        date: new Date().toISOString(),
+        items: invoiceObj.items,
+        subtotal: invoiceObj.subtotal,
+        discount: invoiceObj.discount,
+        total: invoiceObj.total
+      };
+      showPrintModal(printedInvoice);
+      clearBilling();
+      updateDashboard();
+    }
+
+    function clearBilling() {
+      currentInvoiceItems = [];
+      document.getElementById('overallDiscount').value = '0';
+      displayInvoiceItems();
+    }
+
+    function showPrintModal(invoice) {
+      const modal = document.getElementById('printModal');
+      const printableInvoice = document.getElementById('printableInvoice');
+
+      // First product image if available
+      const firstItemProduct = invoice.items.length > 0 ? products.find(p => p.id === invoice.items[0].productId) : null;
+      const productImageHtml = firstItemProduct && firstItemProduct.image ? `<img src="${firstItemProduct.image}" style="max-width:100%; border-radius:10px; margin-bottom:10px;">` : '';
+      const firstProductBarcode = firstItemProduct ? firstItemProduct.barcode : null;
+      const barcodeSvgHtml = firstProductBarcode ? `<svg id="invoice-barcode"></svg>` : '';
+
+      printableInvoice.innerHTML = `
+        <div class="print-invoice">
+          <div class="print-header">
+            <h2>SONIYA DRESSES</h2>
+            <p>Main Road, Pandharkawda</p>
+            <p>Phone: +91-XXXXXXXXXX</p>
+          </div>
+
+          <div class="print-row"><span>Invoice #:</span><span>${invoice.id}</span></div>
+          <div class="print-row"><span>Date:</span><span>${new Date(invoice.date).toLocaleDateString()}</span></div>
+          <hr style="margin:10px 0;">
+          ${productImageHtml}
+          <div style="text-align:center;margin:10px 0;">${barcodeSvgHtml}</div>
+          <hr style="margin:10px 0;">
+          ${invoice.items.map(item => `
+            <div class="print-row"><span>${item.name}</span><span></span></div>
+            <div class="print-row" style="font-size:10px;"><span>${item.size || ''}, ${item.color || ''}</span><span></span></div>
+            <div class="print-row"><span>${item.quantity} x ₹${item.price}</span><span>₹${item.total.toFixed(2)}</span></div>
+          `).join('')}
+
+          <div class="print-total">
+            <div class="print-row"><span>Subtotal:</span><span>₹${invoice.subtotal.toFixed(2)}</span></div>
+            <div class="print-row"><span>Discount:</span><span>-₹${invoice.discount.toFixed(2)}</span></div>
+            <div class="print-row" style="font-size:14px;"><span>TOTAL:</span><span>₹${invoice.total.toFixed(2)}</span></div>
+          </div>
+
+          <div style="text-align:center;margin-top:20px;font-size:10px;">
+            <p>Thank you for shopping with us!</p>
+            <p>Visit again for latest fashion trends</p>
+          </div>
+        </div>
+      `;
+
+      if (firstProductBarcode) {
+        try {
+          JsBarcode("#invoice-barcode", firstProductBarcode, {
+            format: "CODE128",
+            displayValue: true,
+            lineColor: "#000",
+            width: 1,
+            height: 30,
+            margin: 5
+          });
+        } catch (e) {}
+      }
+
+      modal.style.display = 'block';
+    }
+
+    function closePrintModal(){ document.getElementById('printModal').style.display = 'none'; }
+
+    function printInvoice() {
+      const printContent = document.getElementById('printableInvoice').innerHTML;
+      const originalContent = document.body.innerHTML;
+      document.body.innerHTML = printContent;
+      window.print();
+      document.body.innerHTML = originalContent;
+      location.reload();
+    }
+
+    function downloadInvoice(){ alert('PDF download can be implemented with jsPDF or html2pdf.'); }
+
+    function displayInvoices() {
+      const invoicesList = document.getElementById('invoicesList');
+      const searchTerm = document.getElementById('invoiceSearch')?.value.toLowerCase() || '';
+
+      const filteredInvoices = invoices.filter(inv => 
+        (inv.id || '').toString().includes(searchTerm) || 
+        (inv.date || '').toString().includes(searchTerm)
+      );
+
+      invoicesList.innerHTML = filteredInvoices.map(inv => `
+        <div class="product-card">
+          <h3>Invoice #${inv.id}</h3>
+          <p><strong>Date:</strong> ${new Date(inv.date).toLocaleDateString()}</p>
+          <p><strong>Total:</strong> ₹${(inv.total || 0).toFixed(2)}</p>
+          <p><strong>Items:</strong> ${inv.invoice_items ? inv.invoice_items.length : 0}</p>
+          <div>
+            <button class="btn btn-secondary" onclick="viewInvoice('${inv.id}')">👁️ View</button>
+            <button class="btn" onclick="reprintInvoice('${inv.id}')">🖨️ Print</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function viewInvoice(invoiceId) {
+      const inv = invoices.find(i => i.id === invoiceId);
+      if (inv) {
+        // if invoice doesn't include items loaded, fetch them
+        if (!inv.invoice_items) {
+          supabase.from('invoice_items').select('*').eq('invoice_id', invoiceId).then(({data, error})=>{
+            if (!error) {
+              inv.invoice_items = data;
+              showPrintModal({
+                id: inv.id,
+                date: inv.date,
+                items: inv.invoice_items,
+                subtotal: inv.subtotal || 0,
+                discount: inv.discount || 0,
+                total: inv.total || 0
+              });
+            }
+          });
+        } else {
+          showPrintModal({
+            id: inv.id,
+            date: inv.date,
+            items: inv.invoice_items,
+            subtotal: inv.subtotal || 0,
+            discount: inv.discount || 0,
+            total: inv.total || 0
+          });
+        }
+      }
+    }
+
+    function reprintInvoice(invoiceId) { viewInvoice(invoiceId); }
+
+    // -------------------------
+    // Returns
+    // -------------------------
+    async function processReturn(event) {
+      event.preventDefault();
+      const barcode = document.getElementById('returnBarcode').value.trim();
+      const quantity = parseInt(document.getElementById('returnQuantity').value);
+      const reason = document.getElementById('returnReason').value.trim();
+
+      const product = products.find(p => p.barcode === barcode);
+      if (!product) {
+        alert('Product not found. Please check the barcode.');
+        return;
+      }
+      if (quantity <= 0 || isNaN(quantity)) {
+        alert('Please enter a valid quantity.');
+        return;
+      }
+
+      const returnRecord = {
+        product_id: product.id,
+        product_name: product.name,
+        barcode: product.barcode,
+        quantity,
+        reason,
+        credit_amount: (product.selling_price || 0) * quantity
+      };
+
+      const { error: insertErr } = await supabase.from('returns').insert([returnRecord]);
+      if (insertErr) {
+        console.error('processReturn insert error', insertErr);
+        alert('Error saving return: ' + insertErr.message);
+        return;
+      }
+
+      // Update stock
+      const newQty = (product.quantity || 0) + quantity;
+      await supabase.from('products').update({ quantity: newQty }).eq('id', product.id);
+
+      document.getElementById('returnForm').reset();
+      await loadReturns();
+      await loadProducts();
+      showCreditNoteModal({ id: makeUUID(), date: new Date().toISOString(), ...returnRecord });
+    }
+
+    function displayReturns() {
+      const returnsList = document.getElementById('returnsList');
+      const items = returnsArr.map(ret => `
+        <div class="product-card">
+          <h4>Return ID: ${ret.id}</h4>
+          <p><strong>Date:</strong> ${new Date(ret.date).toLocaleDateString()}</p>
+          <p><strong>Product:</strong> ${ret.product_name}</p>
+          <p><strong>Quantity:</strong> ${ret.quantity}</p>
+          <p><strong>Credit Amount:</strong> ₹${(ret.credit_amount || 0).toFixed(2)}</p>
+          <p><strong>Reason:</strong> ${ret.reason}</p>
+        </div>
+      `).join('');
+      returnsList.innerHTML = items || '<div class="product-card">No returns have been processed yet.</div>';
+    }
+
+    function showCreditNoteModal(creditNote) {
+      const modal = document.getElementById('printModal');
+      const printableInvoice = document.getElementById('printableInvoice');
+      printableInvoice.innerHTML = `
+        <div class="print-invoice">
+          <div class="print-header"><h2>SONIYA DRESSES</h2><h3>CREDIT NOTE</h3><p>Main Road, Pandharkawda</p></div>
+          <div class="print-row"><span>Credit Note #:</span><span>${creditNote.id}</span></div>
+          <div class="print-row"><span>Date:</span><span>${new Date(creditNote.date).toLocaleDateString()}</span></div>
+          <hr style="margin:10px 0;">
+          <div class="print-row"><span>Product:</span><span>${creditNote.product_name}</span></div>
+          <div class="print-row"><span>Quantity:</span><span>${creditNote.quantity}</span></div>
+          <div class="print-row"><span>Reason:</span><span>${creditNote.reason}</span></div>
+          <div class="print-total"><div class="print-row" style="font-size:14px;"><span>Credit Amount:</span><span>₹${(creditNote.credit_amount||0).toFixed(2)}</span></div></div>
+          <div style="text-align:center;margin-top:20px;font-size:10px;"><p>This credit note can be used for a future purchase.</p></div>
+        </div>
+      `;
+      modal.style.display = 'block';
+    }
+
+    // -------------------------
+    // Suppliers CRUD
+    // -------------------------
+    async function addSupplier(event) {
+      event.preventDefault();
+      const supplier = {
+        name: document.getElementById('supplierName').value,
+        contact_person: document.getElementById('supplierContact').value,
+        contact_info: document.getElementById('supplierInfo').value
+      };
+      const { error } = await supabase.from('suppliers').insert([supplier]);
+      if (error) {
+        console.error('addSupplier error', error);
+        alert('Error adding supplier: ' + error.message);
+      } else {
+        alert('Supplier added successfully!');
+        document.getElementById('supplierForm').reset();
+        await loadSuppliers();
+      }
+    }
+
+    async function deleteSupplier(supplierId) {
+      if (!confirm('Delete supplier?')) return;
+      const { error } = await supabase.from('suppliers').delete().eq('id', supplierId);
+      if (error) console.error('deleteSupplier error', error);
+      await loadSuppliers();
+    }
+
+    function displaySuppliers() {
+      const suppliersList = document.getElementById('suppliersList').querySelector('.product-grid');
+      const items = suppliers.map(sup => `
+        <div class="product-card">
+          <h4>${sup.name}</h4>
+          <p><strong>Contact:</strong> ${sup.contact_person || ''}</p>
+          <p><strong>Info:</strong> ${sup.contact_info || ''}</p>
+          <button class="btn btn-danger" onclick="deleteSupplier('${sup.id}')">Delete</button>
+        </div>
+      `).join('');
+      suppliersList.innerHTML = items || '<div class="product-card">No suppliers added yet.</div>';
+    }
+
+    // -------------------------
+    // Expenses CRUD
+    // -------------------------
+    async function addExpense(event) {
+      event.preventDefault();
+      const expense = {
+        date: document.getElementById('expenseDate').value,
+        category: document.getElementById('expenseCategory').value,
+        description: document.getElementById('expenseDescription').value,
+        amount: parseFloat(document.getElementById('expenseAmount').value) || 0
+      };
+      const { error } = await supabase.from('expenses').insert([expense]);
+      if (error) {
+        console.error('addExpense error', error);
+        alert('Error adding expense: ' + error.message);
+      } else {
+        document.getElementById('expenseForm').reset();
+        await loadExpenses();
+        alert('Expense added successfully!');
+      }
+    }
+
+    async function deleteExpense(expenseId) {
+      if (!confirm('Are you sure you want to delete this expense?')) return;
+      const { error } = await supabase.from('expenses').delete().eq('id', expenseId);
+      if (error) console.error('deleteExpense error', error);
+      await loadExpenses();
+    }
+
+    function displayExpenses() {
+      const expensesList = document.getElementById('expensesList');
+      const header = `
+        <div class="expense-item" style="font-weight: bold; background: #f8f9fa;">
+            <div>Date</div><div>Category</div><div>Description</div><div>Amount</div><div>Action</div>
+        </div>
+      `;
+      const items = expenses.map(exp => `
+        <div class="expense-item">
+          <div>${new Date(exp.date).toLocaleDateString()}</div>
+          <div>${exp.category}</div>
+          <div>${exp.description}</div>
+          <div>₹${(exp.amount||0).toFixed(2)}</div>
+          <div><button class="btn btn-danger" onclick="deleteExpense('${exp.id}')">❌</button></div>
+        </div>
+      `).join('');
+      expensesList.innerHTML = header + items;
+    }
+
+    // -------------------------
+    // Reports / Analytics helpers
+    // -------------------------
+    function updateDashboard() {
+      document.getElementById('totalProducts').textContent = products.length;
+      document.getElementById('totalStock').textContent = products.reduce((sum, p) => sum + (p.quantity || 0), 0);
+      document.getElementById('totalInvoices').textContent = invoices.length;
+
+      const today = new Date().toDateString();
+      const todaySales = invoices
+        .filter(inv => new Date(inv.date).toDateString() === today)
+        .reduce((sum, inv) => sum + (inv.total || 0), 0);
+      document.getElementById('todaySales').textContent = '₹' + todaySales.toFixed(2);
+
+      const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
+      const totalExpenses = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+      const totalProfit = totalRevenue - totalExpenses;
+      document.getElementById('totalProfit').textContent = '₹' + totalProfit.toFixed(2);
+
+      displayBestSellingProducts();
+    }
+
+    function displayBestSellingProducts() {
+      // Build a simple best-selling list from invoice_items (if invoices loaded)
+      const counts = {};
+      invoices.forEach(inv => {
+        const items = inv.invoice_items || [];
+        items.forEach(it => {
+          counts[it.product_id] = (counts[it.product_id] || 0) + (it.quantity || 0);
+        });
+      });
+      const arr = Object.entries(counts).map(([id, qty]) => ({ id, qty }));
+      arr.sort((a,b) => b.qty - a.qty);
+      const top5 = arr.slice(0,5).map(x => {
+        const p = products.find(pp => pp.id === x.id);
+        return { product: p, sold: x.qty };
+      });
+
+      const container = document.getElementById('best-selling-products');
+      container.innerHTML = top5.map(x => x.product ? `
+        <div class="product-card">
+          ${x.product.image ? `<img src="${x.product.image}" alt="${x.product.name}">` : ''}
+          <h4>${x.product.name}</h4>
+          <p>Sold: ${x.sold}</p>
+        </div>
+      ` : '').join('');
+    }
+    // -------------------------
+    // Barcode / Scanner helpers (kept basic)
+    // -------------------------
+   async function startCamera() {
+  const video = document.getElementById('video');
+  const cameraView = document.getElementById('cameraView');
+  const resultDiv = document.getElementById('scannedResult');
+  const codeReader = new ZXing.BrowserMultiFormatReader();
+
+  resultDiv.innerHTML = '<p>Loading camera...</p>';
+  cameraView.style.display = 'block';
+
+  try {
+    const videoInputDevices = await codeReader.getVideoInputDevices();
+    const selectedDeviceId = videoInputDevices[0].deviceId;
+    
+    codeReader.decodeFromVideoDevice(selectedDeviceId, 'video', (result, err) => {
+      if (result) {
+        console.log('Found barcode:', result.text);
+        document.getElementById('manualBarcode').value = result.text;
+        searchByBarcode();
+        // Stop scanning after a successful scan
+        codeReader.reset();
+        cameraView.style.display = 'none';
+      }
+      if (err && !(err instanceof ZXing.NotFoundException)) {
+        console.error(err);
+        resultDiv.innerHTML = `<p style="color: red;">Error scanning: ${err.message}</p>`;
+      }
+    });
+
+    resultDiv.innerHTML = '<p>Scanning for barcode...</p>';
+
+  } catch (err) {
+    console.error(err);
+    alert('Camera access denied or not available: ' + err.message);
+    cameraView.style.display = 'none';
+    resultDiv.innerHTML = `<p style="color: red;">Camera access denied or not available.</p>`;
+  }
+}
+
+    function searchByBarcode() {
+      const barcode = document.getElementById('manualBarcode').value;
+      const product = products.find(p => p.barcode === barcode);
+      const result = document.getElementById('scannedResult');
+      if (product) {
+        result.innerHTML = `
+          <div class="product-card">
+            <h3>Product Found!</h3>
+            ${product.image ? `<img src="${product.image}" alt="${product.name}">` : ''}
+            <div class="barcode-container"><svg id="scanned-barcode" class="barcode-svg"></svg></div>
+            <p><strong>Name:</strong> ${product.name}</p>
+            <p><strong>Category:</strong> ${product.category}</p>
+            <p><strong>Size:</strong> ${product.size || ''} | <strong>Color:</strong> ${product.color || ''}</p>
+            <p><strong>Price:</strong> ₹${product.selling_price || 0}</p>
+            <p><strong>Stock:</strong> ${product.quantity}</p>
+            <button class="btn" onclick="addProductToInvoice('${product.id}')">➕ Add to Invoice</button>
+            <button class="btn btn-info" onclick="printBarcode('scanned-barcode')">🖨️ Print Barcode</button>
+          </div>
+        `;
+        try {
+          JsBarcode("#scanned-barcode", product.barcode || '', { format: "CODE128", displayValue: true, lineColor: "#333", width:2, height:40, margin:10 });
+        } catch (e) {}
+      } else {
+        result.innerHTML = `
+          <div class="product-card" style="border:2px solid #ff6b6b;">
+            <h3>Product Not Found</h3>
+            <p>No product found with barcode: ${barcode}</p>
+          </div>
+        `;
+      }
+    }
+    // Add these functions to your existing <script> block
+
+async function exportToExcel() {
+  const { data: products, error } = await supabase.from('products').select('*');
+  if (error) {
+    console.error('Export error:', error);
+    alert('Failed to fetch data for export.');
+    return;
+  }
+  
+  const ws = XLSX.utils.json_to_sheet(products);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Products");
+  XLSX.writeFile(wb, "SoniyaDresses_Products.xlsx");
+}
+
+function importFromExcel() {
+  document.getElementById('excelFile').click();
+}
+
+async function handleExcelImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const json = XLSX.utils.sheet_to_json(worksheet);
+
+    if (json.length === 0) {
+      alert("No data found in the Excel file.");
+      return;
+    }
+    
+    // Clear existing products and insert new ones
+    if (confirm("This will replace all existing products. Are you sure?")) {
+      const { error: deleteError } = await supabase.from('products').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (deleteError) {
+        alert("Failed to clear existing products.");
+        return;
+      }
+      
+      const { error: insertError } = await supabase.from('products').insert(json);
+      if (insertError) {
+        console.error('Import error:', insertError);
+        alert('Failed to import products: ' + insertError.message);
+      } else {
+        alert('Products imported successfully!');
+        await loadProducts();
+      }
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+    function printBarcode(barcodeId) {
+      const barcodeSvg = document.getElementById(barcodeId);
+      if (barcodeSvg) {
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write('<html><head><title>Print Barcode</title>');
+        printWindow.document.write('<style>@media print{body{margin:0;padding:10mm;display:flex;justify-content:center;align-items:center;min-height:100vh;}svg{width:100%;height:auto;max-width:250px;}}</style>');
+        printWindow.document.write('</head><body>');
+      
+  const clonedSvg = barcodeSvg.cloneNode(true);
+  printWindow.document.body.appendChild(clonedSvg);
+  printWindow.document.write("</body></html>");
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+         } else 
+  alert('Barcode not found!');
+}
+
+    // -------------------------
+    
+    // -------------------------
+    // Helpers & UI - Tabs, search etc
+    // -------------------------
+    function showTab(tabId) {
+  // Hide all tabs
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  // Show selected tab
+  document.getElementById(tabId).style.display = 'block';
+}
+
+    function showTab(tabName, element) {
+      const tabs = document.querySelectorAll('.tab-content');
+      tabs.forEach(tab => tab.classList.remove('active'));
+      const buttons = document.querySelectorAll('.nav-tab');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabName).classList.add('active');
+      if (element) element.classList.add('active');
+
+      if (tabName === 'inventory') displayInventory();
+      if (tabName === 'alerts') displayLowStockAlerts();
+      if (tabName === 'suppliers') displaySuppliers();
+    }
+
+    function searchInvoices(){ displayInvoices(); }
+
+    // -------------------------
+    // Barcode generator (same as original)
+    // -------------------------
+    function generateBarcode() {
+      const timestamp = Date.now().toString();
+      const random = Math.random().toString(36).substr(2,5).toUpperCase();
+      return 'SD' + timestamp.slice(-6) + random;
+    }
+
+    // -------------------------
+    // Init: load everything
+    // -------------------------
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Ensure user set SUPABASE_URL / SUPABASE_KEY
+      if ('https://fmxrnqaauabwpgqibbgo.supabase.co' || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZteHJucWFhdWFid3BncWliYmdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY1NTQxMjMsImV4cCI6MjA3MjEzMDEyM30.nSPmqoXZa4htX0_h7jOCW0XrHzomFbEZFkZSchvU7bk") {
+    console.warn("⚠️ Please set SUPABASE_URL and SUPABASE_KEY at the top of the script.");
+  }
+
+  await loadProducts();
+  await loadInvoices();
+  await loadExpenses();
+  await loadSuppliers();
+  await loadReturns();
+
+  // Wire up dark mode toggle
+  const dmBtn = document.getElementById('darkModeToggle');
+  dmBtn.addEventListener('click', () => document.body.classList.toggle('dark-mode'));
+});
+
+    // End of script
+    </script>
+</body>
+</html>
