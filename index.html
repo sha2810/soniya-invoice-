@@ -178,6 +178,7 @@ body.dark-mode .expense-item input {
             <button class="nav-tab" onclick="showTab('invoices', this)">📋 Invoice History</button>
             <button class="nav-tab" onclick="showTab('scanner', this)">📱 Scanner</button>
             <button class="nav-tab" onclick="showTab('expenses', this)">💸 Expenses</button>
+            <button class="nav-tab" onclick="showTab('reports', this)">📈 Reports</button>
         </div>
 
         <div id="dashboard" class="tab-content active">
@@ -495,6 +496,99 @@ body.dark-mode .expense-item input {
     <div id="scannedResult"></div>
 </div>
     </div>
+    <div id="reports" class="tab-content">
+    <h2>📈 Sales & Business Reports</h2>
+    <div class="form-row" style="margin-bottom: 20px;">
+        <div class="form-group">
+            <label>Start Date:</label>
+            <input type="date" id="reportStartDate">
+        </div>
+        <div class="form-group">
+            <label>End Date:</label>
+            <input type="date" id="reportEndDate">
+        </div>
+    </div>
+    <div style="margin-bottom: 20px;">
+        <button class="btn" onclick="generateReport('custom')">Generate Report</button>
+        <button class="btn btn-secondary" onclick="generateReport('today')">Today</button>
+        <button class="btn btn-secondary" onclick="generateReport('thisWeek')">This Week</button>
+        <button class="btn btn-secondary" onclick="generateReport('thisMonth')">This Month</button>
+    </div>
+    
+    <div id="salesReport" class="report-section">
+        <h3>Sales Report</h3>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="reportSalesTotal">₹0</div>
+                <div>Total Sales</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="reportInvoiceCount">0</div>
+                <div>Total Invoices</div>
+            </div>
+        </div>
+        <div class="product-card" style="margin-top:20px;">
+            <h4>Sales by Category</h4>
+            <ul id="salesByCategoryList" style="list-style:none; padding:0;"></ul>
+        </div>
+        <div class="product-card" style="margin-top:20px;">
+            <h4>Top 10 Selling Products</h4>
+            <ul id="topSellingProductsList" style="list-style:none; padding:0;"></ul>
+        </div>
+    </div>
+
+    <div id="profitAndLossReport" class="report-section">
+        <h3>Profit & Loss Report</h3>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="reportRevenue">₹0</div>
+                <div>Total Revenue</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="reportExpenses">₹0</div>
+                <div>Total Expenses</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="reportProfit">₹0</div>
+                <div>Net Profit / Loss</div>
+            </div>
+        </div>
+        <div class="product-card" style="margin-top:20px;">
+            <h4>Most Profitable Products</h4>
+            <ul id="mostProfitableProductsList" style="list-style:none; padding:0;"></ul>
+        </div>
+        <div class="product-card" style="margin-top:20px;">
+            <h4>Expense Breakdown</h4>
+            <ul id="expenseBreakdownList" style="list-style:none; padding:0;"></ul>
+        </div>
+    </div>
+
+    <div id="customerInsightsReport" class="report-section">
+        <h3>Customer Insights</h3>
+        <div class="product-card">
+            <h4>Top 10 Customers by Spending</h4>
+            <ul id="topCustomersList" style="list-style:none; padding:0;"></ul>
+        </div>
+    </div>
+    
+    <div id="inventoryReport" class="report-section">
+        <h3>Inventory Report</h3>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalProductsCount">0</div>
+                <div>Total Products</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalInventoryValue">₹0</div>
+                <div>Total Inventory Value</div>
+            </div>
+        </div>
+        <div class="product-card" style="margin-top:20px;">
+            <h4>Current Stock Levels</h4>
+            <ul id="stockLevelsList" style="list-style:none; padding:0;"></ul>
+        </div>
+    </div>
+</div>
 
     <div id="printModal" class="modal">
         <div class="modal-content">
@@ -1166,7 +1260,7 @@ body.dark-mode .expense-item input {
             <p>Phone: +91-XXXXXXXXXX</p>
           </div>
 
-          <div class="print-row"><span>Invoice #:</span><span>${invoice.id}</span></div>
+          <div class="print-row"><span>Invoice #:</span><span></span></div>
           <div class="print-row"><span>Date:</span><span>${new Date(invoice.date).toLocaleDateString()}</span></div>
           <hr style="margin:10px 0;">
           ${productImageHtml}
@@ -1465,6 +1559,227 @@ body.dark-mode .expense-item input {
 
       displayBestSellingProducts();
     }
+     // --- Core data fetching functions ---
+    async function fetchProducts() {
+        const { data, error } = await supabase.from('products').select('*');
+        if (error) console.error('Error fetching products:', error);
+        else products = data;
+    }
+    async function fetchSuppliers() {
+        const { data, error } = await supabase.from('suppliers').select('*');
+        if (error) console.error('Error fetching suppliers:', error);
+        else suppliers = data;
+    }
+    async function fetchInvoices() {
+        const { data, error } = await supabase.from('invoices').select('*, invoice_items(*)');
+        if (error) console.error('Error fetching invoices:', error);
+        else invoices = data;
+    }
+    async function fetchExpenses() {
+        const { data, error } = await supabase.from('expenses').select('*');
+        if (error) console.error('Error fetching expenses:', error);
+        else expenses = data;
+    }
+    async function fetchReturns() {
+        const { data, error } = await supabase.from('returns').select('*');
+        if (error) console.error('Error fetching returns:', error);
+        else returns = data;
+    }
+
+    
+    // --- Reports functionality (Updated) ---
+async function generateReport(period) {
+    let startDate, endDate;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    // Date range logic (same as before)
+    if (period === 'today') {
+        startDate = new Date(now);
+        endDate = new Date(now);
+        endDate.setHours(23, 59, 59, 999);
+    } else if (period === 'thisWeek') {
+        const day = now.getDay();
+        startDate = new Date(now.setDate(now.getDate() - day)); // Sunday
+        endDate = new Date(now.setDate(now.getDate() - day + 6)); // Saturday
+        endDate.setHours(23, 59, 59, 999);
+    } else if (period === 'thisMonth') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        endDate.setHours(23, 59, 59, 999);
+    } else { // 'custom'
+        startDate = document.getElementById('reportStartDate').value ? new Date(document.getElementById('reportStartDate').value) : null;
+        endDate = document.getElementById('reportEndDate').value ? new Date(document.getElementById('reportEndDate').value) : null;
+        if (!startDate || !endDate) {
+            alert('Please select a valid date range.');
+            return;
+        }
+        endDate.setHours(23, 59, 59, 999);
+    }
+
+    const startISO = startDate.toISOString();
+    const endISO = endDate.toISOString();
+
+    // Fetch all necessary data with a single query
+    const { data: reportData, error } = await supabase
+        .from('invoices')
+        .select(`
+            total,
+            customer_id,
+            invoice_items(
+                product_id,
+                quantity,
+                price,
+                purchase_price,
+                products(name, category)
+            )
+        `)
+        .gte('created_at', startISO) // Assuming 'created_at' is your date field
+        .lte('created_at', endISO);
+
+    // Fetch expenses and customers separately as they are for different reports
+    const { data: reportExpenses } = await supabase
+        .from('expenses')
+        .select('amount, category');
+        
+    const { data: customersData } = await supabase.from('customers').select('*');
+
+    if (error) {
+        console.error('Report generation error:', error);
+        alert('Failed to fetch data for the report.');
+        return;
+    }
+
+    // --- Data Processing ---
+    let totalSales = 0;
+    const salesByCategory = {};
+    const productSales = {};
+    const productProfit = {};
+    const customerSpending = {};
+
+    reportData.forEach(inv => {
+        totalSales += inv.total || 0;
+        
+        // Customer insights
+        if (inv.customer_id) {
+            customerSpending[inv.customer_id] = (customerSpending[inv.customer_id] || 0) + inv.total;
+        }
+
+        const items = inv.invoice_items || [];
+        items.forEach(item => {
+            const productName = item.products.name;
+            const productCategory = item.products.category;
+            const productQuantity = item.quantity;
+            const productPrice = item.price;
+            const purchasePrice = item.purchase_price;
+
+            // Sales by category
+            salesByCategory[productCategory] = (salesByCategory[productCategory] || 0) + (productPrice * productQuantity);
+
+            // Top selling products
+            productSales[productName] = (productSales[productName] || 0) + productQuantity;
+
+            // Most profitable products
+            const profit = (productPrice - purchasePrice) * productQuantity;
+            productProfit[productName] = (productProfit[productName] || 0) + profit;
+        });
+    });
+
+    // --- Report Display ---
+
+    // Sales Report
+    document.getElementById('reportSalesTotal').textContent = `₹${totalSales.toFixed(2)}`;
+    document.getElementById('reportInvoiceCount').textContent = reportData.length;
+    
+    // Sort and display sales by category
+    const categoryList = document.getElementById('salesByCategoryList');
+    categoryList.innerHTML = Object.entries(salesByCategory).map(([category, sales]) => `
+        <li class="report-item"><span>${category}:</span><span>₹${sales.toFixed(2)}</span></li>
+    `).join('');
+
+    // Sort and display top 10 selling products
+    const topSellingList = document.getElementById('topSellingProductsList');
+    const sortedSales = Object.entries(productSales).sort(([, a], [, b]) => b - a).slice(0, 10);
+    topSellingList.innerHTML = sortedSales.map(([productName, quantity]) => `
+        <li class="report-item"><span>${productName}:</span><span>${quantity} sold</span></li>
+    `).join('');
+
+    // Profit & Loss Report
+    const totalRevenue = reportData.reduce((sum, inv) => sum + (inv.total || 0), 0);
+    const totalPurchaseCost = reportData.reduce((sum, inv) => {
+        const items = inv.invoice_items || [];
+        return sum + items.reduce((subSum, item) => subSum + ((item.purchase_price || 0) * (item.quantity || 0)), 0);
+    }, 0);
+    const grossProfit = totalRevenue - totalPurchaseCost;
+    const totalExpenses = reportExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+    const netProfit = grossProfit - totalExpenses;
+
+    document.getElementById('reportRevenue').textContent = `₹${totalRevenue.toFixed(2)}`;
+    document.getElementById('reportExpenses').textContent = `₹${totalExpenses.toFixed(2)}`;
+    document.getElementById('reportProfit').textContent = `₹${netProfit.toFixed(2)}`;
+
+    // Sort and display most profitable products
+    const profitableList = document.getElementById('mostProfitableProductsList');
+    const sortedProfit = Object.entries(productProfit).sort(([, a], [, b]) => b - a).slice(0, 10);
+    profitableList.innerHTML = sortedProfit.map(([productName, profit]) => `
+        <li class="report-item"><span>${productName}:</span><span style="color:${profit >= 0 ? 'green' : 'red'};">₹${profit.toFixed(2)}</span></li>
+    `).join('');
+
+    // Display expense breakdown
+    const expenseBreakdown = {};
+    reportExpenses.forEach(exp => {
+        const category = exp.category || 'Uncategorized';
+        expenseBreakdown[category] = (expenseBreakdown[category] || 0) + exp.amount;
+    });
+    const expenseList = document.getElementById('expenseBreakdownList');
+    expenseList.innerHTML = Object.entries(expenseBreakdown).map(([category, amount]) => `
+        <li class="report-item"><span>${category}:</span><span>₹${amount.toFixed(2)}</span></li>
+    `).join('');
+
+    // Customer Insights
+    const topCustomersList = document.getElementById('topCustomersList');
+    const sortedCustomers = Object.entries(customerSpending).sort(([, a], [, b]) => b - a).slice(0, 10);
+    topCustomersList.innerHTML = sortedCustomers.map(([customerId, totalSpent]) => {
+        const customer = customersData.find(c => c.id === parseInt(customerId));
+        const customerName = customer ? customer.name : `Customer #${customerId}`;
+        return `<li class="report-item"><span>${customerName}:</span><span>₹${totalSpent.toFixed(2)}</span></li>`;
+    }).join('');
+
+    // Inventory Report
+    const { data: allProducts, error: productError } = await supabase.from('products').select('*');
+    if (productError) {
+        console.error('Failed to fetch product data:', productError);
+        return;
+    }
+
+    const totalProductsCount = allProducts.length;
+    const totalInventoryValue = allProducts.reduce((sum, product) => sum + (product.stock || 0) * (product.purchase_price || 0), 0);
+
+    document.getElementById('totalProductsCount').textContent = totalProductsCount;
+    document.getElementById('totalInventoryValue').textContent = `₹${totalInventoryValue.toFixed(2)}`;
+
+    const stockLevelsList = document.getElementById('stockLevelsList');
+    stockLevelsList.innerHTML = allProducts.sort((a, b) => (a.stock || 0) - (b.stock || 0)).map(product => `
+        <li class="report-item">
+            <span>${product.name}:</span>
+            <span style="color:${product.stock > 10 ? 'green' : 'orange'};">${product.stock || 0} in stock</span>
+        </li>
+    `).join('');
+
+    // Show all report sections
+    document.querySelectorAll('.report-section').forEach(section => section.style.display = 'block');
+}
+// Call fetch functions on load (existing code)
+    document.addEventListener('DOMContentLoaded', async function() {
+      await Promise.all([
+        fetchProducts(),
+        fetchSuppliers(),
+        fetchInvoices(),
+        fetchExpenses(),
+        fetchReturns(),
+      ]);
+      showTab('dashboard', document.querySelector('.nav-tab'));
+    });
 
     function displayBestSellingProducts() {
       // Build a simple best-selling list from invoice_items (if invoices loaded)
@@ -1574,18 +1889,129 @@ function searchByBarcode() {
 }
     // Add these functions to your existing <script> block
 
-async function exportToExcel() {
-  const { data: products, error } = await supabase.from('products').select('*');
-  if (error) {
-    console.error('Export error:', error);
-    alert('Failed to fetch data for export.');
-    return;
-  }
-  
-  const ws = XLSX.utils.json_to_sheet(products);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Products");
-  XLSX.writeFile(wb, "SoniyaDresses_Products.xlsx");
+// -------------------------
+// Export to Excel function
+// -------------------------
+function exportToExcel() {
+    if (!products.length && !invoices.length && !expenses.length && !returnsArr.length && !suppliers.length) {
+        alert('No data to export.');
+        return;
+    }
+
+    const workbook = XLSX.utils.book_new();
+
+    // 1. Products Sheet
+    if (products.length > 0) {
+        const productHeaders = [
+            'ID',
+            'Name',
+            'Category',
+            'Size',
+            'Color',
+            'Purchase Price',
+            'Selling Price',
+            'Quantity',
+            'Supplier',
+            'Barcode',
+            'Date Added',
+            'Min Stock Threshold'
+        ];
+        const productData = products.map(p => [
+            p.id,
+            p.name,
+            p.category,
+            p.size,
+            p.color,
+            p.purchase_price,
+            p.selling_price,
+            p.quantity,
+            p.supplier,
+            p.barcode,
+            p.date_added,
+            p.min_stock_quantity
+        ]);
+        const productSheet = XLSX.utils.aoa_to_sheet([productHeaders, ...productData]);
+        XLSX.utils.book_append_sheet(workbook, productSheet, 'Products');
+    }
+
+    // 2. Invoices Sheet (with items)
+    if (invoices.length > 0) {
+        const invoiceHeaders = [
+            'Invoice Number',
+            'Date',
+            'Total Amount',
+            'Discount',
+            'Subtotal'
+        ];
+        const invoiceData = invoices.map(i => [
+            i.invoice_number,
+            new Date(i.date).toLocaleDateString(),
+            i.total,
+            i.discount,
+            i.subtotal
+        ]);
+        const invoiceSheet = XLSX.utils.aoa_to_sheet([invoiceHeaders, ...invoiceData]);
+        XLSX.utils.book_append_sheet(workbook, invoiceSheet, 'Invoices');
+    }
+
+    // 3. Expenses Sheet
+    if (expenses.length > 0) {
+        const expenseHeaders = [
+            'Date',
+            'Category',
+            'Description',
+            'Amount'
+        ];
+        const expenseData = expenses.map(e => [
+            e.date,
+            e.category,
+            e.description,
+            e.amount
+        ]);
+        const expenseSheet = XLSX.utils.aoa_to_sheet([expenseHeaders, ...expenseData]);
+        XLSX.utils.book_append_sheet(workbook, expenseSheet, 'Expenses');
+    }
+
+    // 4. Returns Sheet
+    if (returnsArr.length > 0) {
+        const returnsHeaders = [
+            'Date',
+            'Product Name',
+            'Barcode',
+            'Quantity',
+            'Reason',
+            'Credit Amount'
+        ];
+        const returnsData = returnsArr.map(r => [
+            new Date(r.date).toLocaleDateString(),
+            r.product_name,
+            r.barcode,
+            r.quantity,
+            r.reason,
+            r.credit_amount
+        ]);
+        const returnsSheet = XLSX.utils.aoa_to_sheet([returnsHeaders, ...returnsData]);
+        XLSX.utils.book_append_sheet(workbook, returnsSheet, 'Returns');
+    }
+    
+    // 5. Suppliers Sheet
+    if (suppliers.length > 0) {
+        const supplierHeaders = [
+            'Name',
+            'Contact Person',
+            'Contact Info'
+        ];
+        const supplierData = suppliers.map(s => [
+            s.name,
+            s.contact_person,
+            s.contact_info
+        ]);
+        const supplierSheet = XLSX.utils.aoa_to_sheet([supplierHeaders, ...supplierData]);
+        XLSX.utils.book_append_sheet(workbook, supplierSheet, 'Suppliers');
+    }
+
+    // Generate and download the file
+    XLSX.writeFile(workbook, 'Soniya_Dresses_Report.xlsx');
 }
 
 function importFromExcel() {
